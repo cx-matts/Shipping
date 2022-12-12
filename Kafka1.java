@@ -28,12 +28,12 @@ public class WordCountApplication {
        props.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.String().getClass());
 
        StreamsBuilder builder = new StreamsBuilder();
-       KStream<String, String> textLines = builder.stream("MSK_1");
+       KStream<String, String> textLines = builder.stream(mskName1);
        KTable<String, Long> wordCounts = textLines
            .flatMapValues(textLine -> Arrays.asList(textLine.toLowerCase().split("\\W+")))
            .groupBy((key, word) -> word)
            .count(Materialized.<String, Long, KeyValueStore<Bytes, byte[]>>as("counts-store"));
-       wordCounts.toStream().to("MSK_2", Produced.with(Serdes.String(), Serdes.Long()));
+       wordCounts.toStream().to(mskName2, Produced.with(Serdes.String(), Serdes.Long()));
 
        KafkaStreams streams = new KafkaStreams(builder.build(), props);
        streams.start();
